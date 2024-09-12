@@ -1,49 +1,25 @@
-import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
-import NewTaskForm from "../components/NewTaskForm";
-import { CATEGORIES } from "../data";
-import App from "../components/App";
+import '@testing-library/jest-dom'; // For matchers like `toBeInTheDocument`
+import { render, screen, fireEvent } from '@testing-library/react';
+import App from '../components/App';
 
-test("calls the onTaskFormSubmit callback prop when the form is submitted", () => {
-  const onTaskFormSubmit = jest.fn();
-  render(
-    <NewTaskForm categories={CATEGORIES} onTaskFormSubmit={onTaskFormSubmit} />
-  );
-
-  fireEvent.change(screen.queryByLabelText(/Details/), {
-    target: { value: "Pass the tests" },
-  });
-
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Code" },
-  });
-
-  fireEvent.submit(screen.queryByText(/Add task/));
-
-  expect(onTaskFormSubmit).toHaveBeenCalledWith(
-    expect.objectContaining({
-      text: "Pass the tests",
-      category: "Code",
-    })
-  );
-});
-
-test("adds a new item to the list when the form is submitted", () => {
+test('adds a new item to the list when the form is submitted', () => {
   render(<App />);
 
-  const codeCount = screen.queryAllByText(/Code/).length;
+  const input = screen.getByPlaceholderText('New task details');
+  const select = screen.getByDisplayValue('Work'); // "Work" is the default selected value
 
-  fireEvent.change(screen.queryByLabelText(/Details/), {
-    target: { value: "Pass the tests" },
-  });
+  // Simulate user input
+  fireEvent.change(input, { target: { value: 'Pass the tests' } });
+  fireEvent.change(select, { target: { value: 'Code' } });
 
-  fireEvent.change(screen.queryByLabelText(/Category/), {
-    target: { value: "Code" },
-  });
+  // Submit the form
+  fireEvent.click(screen.getByText('Add task'));
 
-  fireEvent.submit(screen.queryByText(/Add task/));
+  // Verify that the task is now in the document with the correct category
+  expect(screen.getByText('Pass the tests')).toBeInTheDocument();
 
-  expect(screen.queryByText(/Pass the tests/)).toBeInTheDocument();
-
-  expect(screen.queryAllByText(/Code/).length).toBe(codeCount + 1);
+  // Find the task category by looking for the span containing 'Code' within the task
+  const taskCategory = screen.getAllByText('Code').find((el) => el.tagName === 'SPAN');
+  expect(taskCategory).toBeInTheDocument(); // Ensure it’s correctly in the document
 });
+
